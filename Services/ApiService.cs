@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Memos_Project.Extensions
+namespace Memos_Project.Services
 {
-    public class API_Manipulator
+    public class ApiService
     {
         // Disable SSL certificate validation
         private static readonly HttpClientHandler _handler = new HttpClientHandler
@@ -10,17 +10,17 @@ namespace Memos_Project.Extensions
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
         };
 
-        static readonly Lazy<API_Manipulator> _instanceHolder =
-            new Lazy<API_Manipulator>(() => new API_Manipulator(_handler));
+        static readonly Lazy<ApiService> _instanceHolder =
+            new Lazy<ApiService>(() => new ApiService(_handler));
 
         private readonly HttpClient _client;
 
-        private API_Manipulator(HttpClientHandler handler)
+        private ApiService(HttpClientHandler handler)
         {
             _client = new HttpClient(handler);
         }
 
-        public static API_Manipulator Instance => _instanceHolder.Value;
+        public static ApiService Instance => _instanceHolder.Value;
 
         public async Task<JObject?> GetJsonAsync(string url)
         {
@@ -39,7 +39,7 @@ namespace Memos_Project.Extensions
             }
         }
 
-        public async Task<List<JObject>> GetAllPeopleAsync()
+        public async Task<List<JObject>> GetJSON_AllPeopleAsync()
         {
             var allPeople = new List<JObject>();
             string? nextUrl = "https://swapi.dev/api/people/";
@@ -65,6 +65,61 @@ namespace Memos_Project.Extensions
             }
 
             return allPeople;
+        }
+        //Dictionary<string, string> is used to store planet URLs and their names  - extra function for the LINQ approach 
+        public async Task<Dictionary<string, string>> GetJSON_AllPlanetsAsync()
+        {
+            var planetsDict = new Dictionary<string, string>();
+            string? nextUrl = "https://swapi.dev/api/planets/";
+
+            while (!string.IsNullOrEmpty(nextUrl))
+            {
+                var json = await GetJsonAsync(nextUrl);
+                if (json == null) break;
+                foreach(var planet in json["results"] ?? Enumerable.Empty<JToken>())
+                {
+                    if (planet is JObject planetObj)
+                    {
+                        string? name = planetObj["name"]?.ToString();
+                        string? url = planetObj["url"]?.ToString();
+                        if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(url))
+                        {
+                            planetsDict[url] = name;
+                        }
+                    }
+                }
+
+                nextUrl = json["next"]?.ToString(); // Get the url to next json page
+            }
+
+            return planetsDict;
+        }
+        public async Task<List<JObject>> GetJSON_AllVehiclesAsync()
+        {
+            var allVehicles = new List<JObject>();
+            string? nextUrl = "https://swapi.dev/api/vehicles/";
+
+            while (!string.IsNullOrEmpty(nextUrl))
+            {
+                var json = await GetJsonAsync(nextUrl);
+                if (json == null) break;
+
+                var results = json["results"] as JArray;
+                if (results != null)
+                {
+                    foreach (var person in results)
+                    {
+                        if (person is JObject personObj)
+                        {
+                            allVehicles.Add(personObj);
+                        }
+                    }
+                }
+
+                nextUrl = json["next"]?.ToString(); // Get the url to next json page
+            }
+
+            return allVehicles;
         }
         public async Task<string?> GetPlanetNameAsync(string planetUrl)
         {
@@ -93,33 +148,7 @@ namespace Memos_Project.Extensions
 
             return matchingCharacters;
         }
-        public async Task<List<JObject>> GetJson_VehiclesAsync()
-        {
-            var allVehicles = new List<JObject>();
-            string? nextUrl = "https://swapi.dev/api/vehicles/";
 
-            while (!string.IsNullOrEmpty(nextUrl))
-            {
-                var json = await GetJsonAsync(nextUrl);
-                if (json == null) break;
-
-                var results = json["results"] as JArray;
-                if (results != null)
-                {
-                    foreach (var person in results)
-                    {
-                        if (person is JObject personObj)
-                        {
-                            allVehicles.Add(personObj);
-                        }
-                    }
-                }
-
-                nextUrl = json["next"]?.ToString(); // Get the url to next json page
-            }
-
-            return allVehicles;
-        }
         public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson , List<JObject> VehiclesJson, string planetName)
         {
             List<string> matchingCharacters = new List<string>();
@@ -151,9 +180,9 @@ namespace Memos_Project.Extensions
             return matchingCharacters;
 
         }
-        public List<string> GetString_CharactersPilotsFromPlanet_LINQ(
-    List<JToken> people,
-    List<JToken> vehicles,
+        public async Task<List<string>> GetString_CharactersPilotsFromPlanet_LINQ(
+    List<JObject> people,
+    List<JObject> vehicles,
     Dictionary<string, string> planetUrlToName,
     string targetPlanetName)
         {
