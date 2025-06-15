@@ -183,7 +183,7 @@ namespace Memos_Project.Services
             return matchingCharacters;
         }
         // Function to get characters who are pilots of vehicles from a specific planet
-        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson, List<JObject> VehiclesJson, string planetName)
+        public async Task<List<string>> GetString_PilotsFromPlanetAsync(List<JObject> peopleJson, List<JObject> VehiclesJson, string planetName)
         {
             List<string> matchingCharacters = new List<string>();
             foreach (var vehicle in VehiclesJson ?? Enumerable.Empty<JToken>())
@@ -215,7 +215,7 @@ namespace Memos_Project.Services
 
         }
         // Function to get characters who are pilots of vehicles from a specific planet using LINQ
-        public async Task<List<string>> GetString_CharactersPilotsFromPlanet_LINQ(
+        public async Task<List<string>> GetString_PilotsFromPlanet_LINQ(
     List<JObject> people,
     List<JObject> vehicles,
     Dictionary<string, string> planetUrlToName,
