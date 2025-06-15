@@ -76,7 +76,7 @@ namespace Memos_Project.Services
             {
                 var json = await GetJsonAsync(nextUrl);
                 if (json == null) break;
-                foreach(var planet in json["results"] ?? Enumerable.Empty<JToken>())
+                foreach (var planet in json["results"] ?? Enumerable.Empty<JToken>())
                 {
                     if (planet is JObject planetObj)
                     {
@@ -154,6 +154,12 @@ namespace Memos_Project.Services
             var json = await GetJsonAsync(planetUrl);
             return json["name"]?.ToString();
         }
+        // Function to get the name of a ship from its URL
+        public async Task<string?> GetShipNameAsync(string shipUrl)
+        {
+            var json = await GetJsonAsync(shipUrl);
+            return json["name"]?.ToString();
+        }
         // Additional function to search people by their homeworld planet name
         public async Task<List<string>> GetString_CharactersFromPlanetAsync(List<JObject> peopleJson, string planetName)
         {
@@ -177,7 +183,7 @@ namespace Memos_Project.Services
             return matchingCharacters;
         }
         // Function to get characters who are pilots of vehicles from a specific planet
-        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson , List<JObject> VehiclesJson, string planetName)
+        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson, List<JObject> VehiclesJson, string planetName)
         {
             List<string> matchingCharacters = new List<string>();
             foreach (var vehicle in VehiclesJson ?? Enumerable.Empty<JToken>())
@@ -238,7 +244,35 @@ namespace Memos_Project.Services
 
             return result;
         }
+        public async Task<List<string>> GetString_ShipsOfPilotsFromPlanetAsync(List<JObject> peopleJson, string planetName)
+        {
+            var shipNames = new HashSet<string>();
 
+            foreach (var person in peopleJson ?? Enumerable.Empty<JObject>())
+            {
+                string? homeworldUrl = person["homeworld"]?.ToString();
+                string? currentPlanetName = await GetPlanetNameAsync(homeworldUrl ?? string.Empty);
+
+                if (currentPlanetName == planetName)
+                {
+                    var vehicleUrls = person["vehicles"]?.ToObject<List<string>>() ?? new List<string>();
+                    var starshipUrls = person["starships"]?.ToObject<List<string>>() ?? new List<string>();
+                    var allShipUrls = vehicleUrls.Concat(starshipUrls);
+
+                    foreach (var shipUrl in allShipUrls)
+                    {
+                        string? shipName = await GetShipNameAsync(shipUrl);
+                        if (!string.IsNullOrEmpty(shipName))
+                        {
+                            shipNames.Add(shipName);
+                        }
+                    }
+                }
+            }
+
+            return shipNames.ToList();
+            
+        }
         // Additional methods for POST, PUT, DELETE can be added here  
     }
 }
