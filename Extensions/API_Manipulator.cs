@@ -71,12 +71,12 @@ namespace Memos_Project.Extensions
             var json = await GetJsonAsync(planetUrl);
             return json["name"]?.ToString();
         }
-        public async Task<List<string>> GetCharactersFromPlanetAsync(string planetName)
+        public async Task<List<string>> GetString_CharactersFromPlanetAsync(string planetName)
         {
-            var peopleJson = await GetJsonAsync("https://swapi.dev/api/people/");
+            var peopleJson = await GetAllPeopleAsync();
             List<string> matchingCharacters = new List<string>();
 
-            foreach (var person in peopleJson["results"] ?? Enumerable.Empty<JToken>())
+            foreach (var person in peopleJson ?? Enumerable.Empty<JToken>())
             {
                 string? homeworldUrl = person["homeworld"]?.ToString();
                 string? currentPlanetName = await GetPlanetNameAsync(homeworldUrl ?? string.Empty);
@@ -93,6 +93,65 @@ namespace Memos_Project.Extensions
 
             return matchingCharacters;
         }
-        // Additional methods for POST, PUT, DELETE can be added here  
+        public async Task<List<JObject>> GetJson_VehiclesAsync()
+        {
+            var allVehicles = new List<JObject>();
+            string? nextUrl = "https://swapi.dev/api/vehicles/";
+
+            while (!string.IsNullOrEmpty(nextUrl))
+            {
+                var json = await GetJsonAsync(nextUrl);
+                if (json == null) break;
+
+                var results = json["results"] as JArray;
+                if (results != null)
+                {
+                    foreach (var person in results)
+                    {
+                        if (person is JObject personObj)
+                        {
+                            allVehicles.Add(personObj);
+                        }
+                    }
+                }
+
+                nextUrl = json["next"]?.ToString(); // Get the url to next json page
+            }
+
+            return allVehicles;
+        }
+        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(string planetName)
+        {
+            var peopleJson = await GetAllPeopleAsync();
+            var VehiclesJson = await GetJson_VehiclesAsync();
+            List<string> matchingCharacters = new List<string>();
+            foreach (var vehicle in VehiclesJson ?? Enumerable.Empty<JToken>())
+            {
+                var pilotsArray = vehicle["pilots"] as JArray;
+                if (pilotsArray == null || pilotsArray.Count == 0)
+                    continue;
+                foreach (var pilotUrlToken in pilotsArray)
+                {
+                    string? pilotUrl = pilotUrlToken?.ToString();
+                    if (string.IsNullOrEmpty(pilotUrl))
+                        continue;
+                    var pilot = peopleJson.FirstOrDefault(p => p["url"]?.ToString() == pilotUrl);
+                    if (pilot == null)
+                        continue;
+                    string? homeworldUrl = pilot["homeworld"]?.ToString();
+                    string? currentPlanetName = await GetPlanetNameAsync(homeworldUrl ?? string.Empty);
+                    if (currentPlanetName == planetName)
+                    {
+                        string? characterName = pilot["name"]?.ToString();
+                        if (!string.IsNullOrEmpty(characterName))
+                        {
+                            matchingCharacters.Add(characterName);
+                        }
+                    }
+                }
+            }
+            return matchingCharacters;
+            // Additional methods for POST, PUT, DELETE can be added here  
+        }
     }
 }
