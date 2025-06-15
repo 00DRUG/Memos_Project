@@ -10,7 +10,7 @@ class Program
             Console.WriteLine("Menu");
             Console.WriteLine("Task 1: Find duplicates in 10000000 int array");
             Console.WriteLine("Task 2: Find ships with pilot from Kashyyk");
-            Console.WriteLine("Task 3: ");
+            Console.WriteLine("Task 3: Create a data representation of the crew of the Enterprise");
 
             string? input = Console.ReadLine();
             switch (input)
@@ -29,6 +29,8 @@ class Program
                     string name = Console.ReadLine() ?? "";
 
                     service.PrintCrewHierarchyFromName(service.Captain, name);
+                    var infected = service.GetInfectedUntilCaptain(service.Captain, name);
+                    Console.WriteLine(string.Join(" -> ", infected));
                     break;
                 default:
                     Console.WriteLine("Invalid option. Please try again.");
