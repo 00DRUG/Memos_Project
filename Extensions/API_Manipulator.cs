@@ -71,9 +71,9 @@ namespace Memos_Project.Extensions
             var json = await GetJsonAsync(planetUrl);
             return json["name"]?.ToString();
         }
-        public async Task<List<string>> GetString_CharactersFromPlanetAsync(string planetName)
+        // Additional function to search people by their homeworld planet name
+        public async Task<List<string>> GetString_CharactersFromPlanetAsync(List<JObject> peopleJson, string planetName)
         {
-            var peopleJson = await GetAllPeopleAsync();
             List<string> matchingCharacters = new List<string>();
 
             foreach (var person in peopleJson ?? Enumerable.Empty<JToken>())
@@ -120,10 +120,8 @@ namespace Memos_Project.Extensions
 
             return allVehicles;
         }
-        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(string planetName)
+        public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson , List<JObject> VehiclesJson, string planetName)
         {
-            var peopleJson = await GetAllPeopleAsync();
-            var VehiclesJson = await GetJson_VehiclesAsync();
             List<string> matchingCharacters = new List<string>();
             foreach (var vehicle in VehiclesJson ?? Enumerable.Empty<JToken>())
             {
@@ -151,7 +149,38 @@ namespace Memos_Project.Extensions
                 }
             }
             return matchingCharacters;
-            // Additional methods for POST, PUT, DELETE can be added here  
+
         }
+        public List<string> GetString_CharactersPilotsFromPlanet_LINQ(
+    List<JToken> people,
+    List<JToken> vehicles,
+    Dictionary<string, string> planetUrlToName,
+    string targetPlanetName)
+        {
+            var pilotUrls = vehicles
+                .AsParallel()
+                .SelectMany(v => v["pilots"] ?? Enumerable.Empty<JToken>())
+                .Select(p => p.ToString())
+                .Distinct()
+                .ToHashSet();
+
+            var result = people
+                .AsParallel()
+                .Where(p => pilotUrls.Contains(p["url"]?.ToString()))
+                .Where(p =>
+                {
+                    var homeworldUrl = p["homeworld"]?.ToString();
+                    return homeworldUrl != null &&
+                           planetUrlToName.TryGetValue(homeworldUrl, out var name) &&
+                           name == targetPlanetName;
+                })
+                .Select(p => p["name"]?.ToString())
+                .Where(n => !string.IsNullOrEmpty(n))
+                .ToList();
+
+            return result;
+        }
+
+        // Additional methods for POST, PUT, DELETE can be added here  
     }
 }
