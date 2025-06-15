@@ -121,6 +121,34 @@ namespace Memos_Project.Services
 
             return allVehicles;
         }
+        public async Task<List<JObject>> GetJSON_AllStarshipsAsync()
+        {
+            var allStarships = new List<JObject>();
+            string? nextUrl = "https://swapi.dev/api/starships/";
+
+            while (!string.IsNullOrEmpty(nextUrl))
+            {
+                var json = await GetJsonAsync(nextUrl);
+                if (json == null) break;
+
+                var results = json["results"] as JArray;
+                if (results != null)
+                {
+                    foreach (var person in results)
+                    {
+                        if (person is JObject personObj)
+                        {
+                            allStarships.Add(personObj);
+                        }
+                    }
+                }
+
+                nextUrl = json["next"]?.ToString(); // Get the url to next json page
+            }
+
+            return allStarships;
+        }
+        // Function to get the name of a planet from its URL
         public async Task<string?> GetPlanetNameAsync(string planetUrl)
         {
             var json = await GetJsonAsync(planetUrl);
@@ -148,7 +176,7 @@ namespace Memos_Project.Services
 
             return matchingCharacters;
         }
-
+        // Function to get characters who are pilots of vehicles from a specific planet
         public async Task<List<string>> GetString_CharactersPilotsFromPlanetAsync(List<JObject> peopleJson , List<JObject> VehiclesJson, string planetName)
         {
             List<string> matchingCharacters = new List<string>();
@@ -180,6 +208,7 @@ namespace Memos_Project.Services
             return matchingCharacters;
 
         }
+        // Function to get characters who are pilots of vehicles from a specific planet using LINQ
         public async Task<List<string>> GetString_CharactersPilotsFromPlanet_LINQ(
     List<JObject> people,
     List<JObject> vehicles,

@@ -25,5 +25,11 @@ class Program
         {
             Console.WriteLine(pilot);
         }
+        Console.WriteLine("\nThird Approach (LINQ):\n");
+        var pilotsFromPlanet1 = await api.GetString_CharactersFromPlanetAsync(allPeople, targetPlanetName);
+        foreach (var pilot in pilotsFromPlanet1)
+        {
+            Console.WriteLine(pilot);
+        }
     }
 }
