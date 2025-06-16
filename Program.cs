@@ -17,7 +17,10 @@ class Program
             {
                 case "1":
                     var duplicatesService = new DuplicatesService();
-                    duplicatesService.PrintDuplicates();
+                    Console.WriteLine("HashSet method:\n");
+                    duplicatesService.PrintDuplicates_HashSet();
+                    Console.WriteLine("Dictionary method:\n");
+                    duplicatesService.PrintDuplicates_Dictionary();
                     break;
                 case "2":
                     await FindShipsWithPilotFromKashyykAsync();
