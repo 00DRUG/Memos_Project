@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿
 
 namespace Memos_Project.Services
 {
@@ -73,6 +68,7 @@ namespace Memos_Project.Services
             ogawa.Subordinates.Add(bashir);
             bashir.Commander = ogawa;
         }
+        /// Testing function to print the crew hierarchy starting from the captain
         public void PrintCrewHierarchy(CrewMember member, int level = 0)
         {
             if (member == null) return;
@@ -83,6 +79,7 @@ namespace Memos_Project.Services
                 PrintCrewHierarchy(subordinate, level + 1);
             }
         }
+        /// Method to print the hierarchy of a crew member upwards to the captain
         public void PrintHierarchyUpwards(CrewMember member)
         {
             while (member != null)
@@ -91,6 +88,7 @@ namespace Memos_Project.Services
                 member = member.Commander!; 
             }
         }
+        /// Method to find a crew member by name in the hierarchy
         public CrewMember? FindCrewMemberByName(CrewMember root, string name)
         {
             if (root.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
@@ -105,6 +103,7 @@ namespace Memos_Project.Services
 
             return null;
         }
+        /// UNUSED METHOD Method to print the crew hierarchy starting from a specific crew member by name 
         public void PrintCrewHierarchyFromName(CrewMember Captain, string name)
         {
             var member = FindCrewMemberByName(Captain, name);
@@ -117,6 +116,7 @@ namespace Memos_Project.Services
                 Console.WriteLine($"Crew member '{name}' not found.");
             }
         }
+        /// Method to get a list of infected crew members until the captain
         public List<string> GetInfectedUntilCaptain(CrewMember Captain, string name)
         {
             var infected = new List<string>();
@@ -137,5 +137,19 @@ namespace Memos_Project.Services
 
             return infected;
         }
+        /// Method to get all subordinates of a crew member recursively
+        public List<CrewMember> GetAllSubordinates(CrewMember member)
+        {
+            var result = new List<CrewMember>();
+
+            foreach (var subordinate in member.Subordinates)
+            {
+                result.Add(subordinate);
+                result.AddRange(GetAllSubordinates(subordinate));
+            }
+
+            return result;
+        }
+
     }
 }

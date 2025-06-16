@@ -16,24 +16,13 @@ class Program
             switch (input)
             {
                 case "1":
-                    var duplicatesService = new DuplicatesService();
-                    Console.WriteLine("HashSet method:\n");
-                    duplicatesService.PrintDuplicates_HashSet();
-                    Console.WriteLine("Dictionary method:\n");
-                    duplicatesService.PrintDuplicates_Dictionary();
+                    HandleDuplicateTask();
                     break;
                 case "2":
                     await FindShipsWithPilotFromKashyykAsync();
                     break;
                 case "3":
-                    var service = new CrewHierarchy();
-
-                    Console.Write("Enter crew member name: ");
-                    string name = Console.ReadLine() ?? "";
-
-                    service.PrintCrewHierarchyFromName(service.Captain, name);
-                    var infected = service.GetInfectedUntilCaptain(service.Captain, name);
-                    Console.WriteLine(string.Join(" -> ", infected));
+                    HandleCrewHierarchyTask();
                     break;
                 default:
                     Console.WriteLine("Invalid option. Please try again.");
@@ -42,7 +31,16 @@ class Program
 
         }
     }
+    static void HandleDuplicateTask()
+    {
+        var duplicatesService = new DuplicatesService();
 
+        Console.WriteLine("HashSet method:\n");
+        duplicatesService.PrintDuplicates_HashSet();
+
+        Console.WriteLine("Dictionary method:\n");
+        duplicatesService.PrintDuplicates_Dictionary();
+    }
     public static async Task FindShipsWithPilotFromKashyykAsync()
     {
         var api = ApiService.Instance;
@@ -51,12 +49,44 @@ class Program
         var allPeople = await api.GetJSON_AllPeopleAsync();
         var allVehicles = await api.GetJSON_AllVehiclesAsync();
         var allPlanets = await api.GetJSON_AllPlanetsAsync();
+
         Console.WriteLine("All ships whose pilot is from the planet Kashyyyk :\n");
-        var pilotsFromPlanet1 = await api.GetString_ShipsOfPilotsFromPlanetAsync(allPeople, targetPlanetName);
-        foreach (var pilot in pilotsFromPlanet1)
+
+        var ShipsWithpilotsFromPlanet1 = await api.GetString_ShipsOfPilotsFromPlanetAsync(allPeople, targetPlanetName);
+        
+        foreach (var ship in ShipsWithpilotsFromPlanet1)
         {
-            Console.WriteLine(pilot);
+            Console.WriteLine($"- {ship}");
         }
+    }
+    static void HandleCrewHierarchyTask()
+    {
+        var crewService = new CrewHierarchy();
+
+        Console.Write("Enter crew member name: ");
+        string name = Console.ReadLine()?.Trim() ?? "";
+        var member = crewService.FindCrewMemberByName(crewService.Captain, name);
+        if (member == null)
+        {
+            Console.WriteLine($" Crew member '{name}' not found.");
+            return;
+        }
+        // Print the hierarchy of the selected crew member
+        Console.WriteLine($"\n Crew hierarchy under '{member.Name}':");
+        crewService.PrintCrewHierarchy(member);
+
+        // Get all subordinates of the selected crew member as a list of CrewMember objects
+        var subordinates = crewService.GetAllSubordinates(member);
+        Console.WriteLine($"\n All subordinates of '{member.Name}':");
+        foreach (var sub in subordinates)
+        {
+            Console.WriteLine($"- {sub.Name}");
+        }
+
+        // Get the infection toward the captain for the selected crew member
+        var infected = crewService.GetInfectedUntilCaptain(crewService.Captain, name);
+        Console.WriteLine($"\n Infection chain toward the captain:");
+        Console.WriteLine(string.Join("->", infected));
     }
 
 
