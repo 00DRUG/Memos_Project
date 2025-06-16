@@ -78,10 +78,18 @@ class Program
         // Get all subordinates of the selected crew member as a list of CrewMember objects
         var subordinates = crewService.GetAllSubordinates(member);
         Console.WriteLine($"\n All subordinates of '{member.Name}':");
-        foreach (var sub in subordinates)
+        if (subordinates.Any())
         {
-            Console.WriteLine($"- {sub.Name}");
+            foreach (var sub in subordinates)
+            {
+                Console.WriteLine($"- {sub.Name}");
+            }
+        } 
+        else
+        {
+            Console.WriteLine($"No subordinates found for '{member.Name}'.");
         }
+
 
         // Get the infection toward the captain for the selected crew member
         var infected = crewService.GetInfectedUntilCaptain(crewService.Captain, name);
