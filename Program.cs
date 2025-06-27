@@ -127,10 +127,10 @@ class Program
         }
 
 
-        // Get the infection toward the captain for the selected crew member
-        var infected = crewService.GetInfectedUntilCaptain(crewService.Captain, name);
-        Console.WriteLine($"\n Infection chain toward the captain:");
-        Console.WriteLine(string.Join("->", infected));
+        // Get the infection toward the captain for the selected crew member with the subordinates of the member 
+        Console.WriteLine($"\n All infected of '{member.Name}':");
+        var infected = crewService.GetAllInfected(crewService.Captain, name);
+        crewService.PrintInfectedHierarchyFromCaptain(infected);
     }
 
 

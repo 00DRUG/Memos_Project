@@ -150,6 +150,54 @@ namespace Memos_Project.Services
 
             return result;
         }
+        // New approach that subordinates can be infected as well 
+        private void SpreadInfectionUpwards(CrewMember? member, HashSet<CrewMember> infected)
+        {
+            while (member != null && infected.Add(member))
+            {
+                member = member.Commander;
+            }
+        }
+        private void SpreadInfectionDownwards(CrewMember member, HashSet<CrewMember> infected)
+        {
+            foreach (var subordinate in member.Subordinates)
+            {
+                if (infected.Add(subordinate))
+                {
+                    SpreadInfectionDownwards(subordinate, infected);
+                }
+            }
+        }
+        public List<CrewMember> GetAllInfected(CrewMember captain, string infectedName)
+        {
+            var infectedSet = new HashSet<CrewMember>();
+            var start = FindCrewMemberByName(captain, infectedName);
+            if (start == null)
+                return infectedSet.ToList();
+
+            SpreadInfectionUpwards(start, infectedSet);
+            SpreadInfectionDownwards(start, infectedSet);
+
+            return infectedSet.ToList();
+        }
+        public void PrintInfectedHierarchyFromCaptain(List<CrewMember> infected)
+        {
+            PrintInfectedHierarchyRecursive(Captain, infected, 0);
+        }
+
+        private void PrintInfectedHierarchyRecursive(CrewMember member, List<CrewMember> infected, int level)
+        {
+            if (member == null || !infected.Contains(member))
+                return;
+
+            Console.WriteLine(new string('-', level) + member.Name);
+
+            foreach (var subordinate in member.Subordinates)
+            {
+                PrintInfectedHierarchyRecursive(subordinate, infected, level + 1);
+            }
+        }
+
 
     }
 }
