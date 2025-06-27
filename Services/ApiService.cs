@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 using System.Net.Http;
 
 namespace Memos_Project.Services
@@ -342,7 +343,24 @@ namespace Memos_Project.Services
             return resultShips.ToList();
         }
 
+        public static async Task MeasureFuncPerformanceAsync(Func<Task> targetFunc)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
 
+            long beforeMemory = GC.GetTotalMemory(true);
+            var stopwatch = Stopwatch.StartNew();
+
+            await targetFunc();
+
+            stopwatch.Stop();
+            long afterMemory = GC.GetTotalMemory(true);
+            long memoryUsed = afterMemory - beforeMemory;
+
+            Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"Memory used: {memoryUsed / 1024.0:F2} KB");
+        }
 
     }
 }

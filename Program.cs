@@ -45,31 +45,40 @@ class Program
     {
         var api = ApiService.Instance;
         const string targetPlanetName = "Kashyyyk";
-        var shipsTask = api.GetJobject_ShipsOfPilotsFromPlanetAsync_SearchBased(targetPlanetName);
 
-        var ships = await shipsTask;
-
-        if (ships != null)
+        Console.WriteLine("== Measuring new function ==");
+        await ApiService.MeasureFuncPerformanceAsync(async () =>
         {
-            foreach (var ship in ships)
+            var ships = await api.GetJobject_ShipsOfPilotsFromPlanetAsync_SearchBased(targetPlanetName);
+
+            if (ships != null)
             {
-                Console.WriteLine($"- {ship["name"]}");
+                foreach (var ship in ships)
+                {
+                    Console.WriteLine($"- {ship["name"]}");
+                }
             }
-        }
-        else
-        {
-            Console.WriteLine("No ships found.");
-        }
-        Console.WriteLine(" ______________________");
-        var people = await api.GetJSON_AllPeopleAsync();
-        var resultShipsTask = api.GetString_ShipsOfPilotsFromPlanetAsync(people, targetPlanetName);
-        var resultShips = await resultShipsTask; 
+            else
+            {
+                Console.WriteLine("No ships found.");
+            }
+        });
 
-        foreach (var ship in resultShips)
+        Console.WriteLine(" ______________________");
+
+        Console.WriteLine("== Measuring old function ==");
+        await ApiService.MeasureFuncPerformanceAsync(async () =>
         {
-            Console.WriteLine($"- {ship}");
-        }
+            var people = await api.GetJSON_AllPeopleAsync();
+            var resultShips = await api.GetString_ShipsOfPilotsFromPlanetAsync(people, targetPlanetName);
+
+            foreach (var ship in resultShips)
+            {
+                Console.WriteLine($"- {ship}");
+            }
+        });
     }
+
     static void HandleCrewHierarchyTask()
     {
         var crewService = new CrewHierarchy();
