@@ -46,7 +46,7 @@ class Program
         var api = ApiService.Instance;
         const string targetPlanetName = "Kashyyyk";
 
-        Console.WriteLine("== Measuring new function ==");
+        Console.WriteLine("== Measuring new function JObject return ==");
         await ApiService.MeasureFuncPerformanceAsync(async () =>
         {
             var ships = await api.GetJobject_ShipsOfPilotsFromPlanetAsync_SearchBased(targetPlanetName);
@@ -64,7 +64,23 @@ class Program
             }
         });
 
-        Console.WriteLine(" ______________________");
+        Console.WriteLine("== Measuring new function String return ==");
+        await ApiService.MeasureFuncPerformanceAsync(async () =>
+        {
+            var ships = await api.GetString_ShipsOfPilotsFromPlanetAsync_SearchBased(targetPlanetName);
+
+            if (ships != null)
+            {
+                foreach (var ship in ships)
+                {
+                    Console.WriteLine($"- {ship}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No ships found.");
+            }
+        });
 
         Console.WriteLine("== Measuring old function ==");
         await ApiService.MeasureFuncPerformanceAsync(async () =>

@@ -342,6 +342,42 @@ namespace Memos_Project.Services
 
             return resultShips.ToList();
         }
+        // Duplicate of the previous method, but with a string output 
+        public async Task<List<string>?> GetString_ShipsOfPilotsFromPlanetAsync_SearchBased(string planetName)
+        {
+            var resultShips = new HashSet<string>();
+
+            string? planetUrl = await GetPlanetUrlByNameAsync_SearchBased(planetName);
+            if (planetUrl == null)
+            {
+                Console.WriteLine($"Planet '{planetName}' not found.");
+                return null;
+            }
+            var allShips = (await GetJSON_AllVehiclesAsync()).Concat(await GetJSON_AllStarshipsAsync());
+
+            foreach (var ship in allShips)
+            {
+                var pilots = ship["pilots"] as JArray;
+                if (pilots == null || pilots.Count == 0)
+                    continue;
+
+                foreach (var pilotUrlToken in pilots)
+                {
+                    string? pilotUrl = pilotUrlToken?.ToString();
+                    var pilotJson = await GetJsonAsync(pilotUrl);
+                    if (pilotJson == null) continue;
+
+                    string? homeworldUrl = pilotJson["homeworld"]?.ToString();
+                    if (homeworldUrl == planetUrl)
+                    {
+                        resultShips.Add(ship["name"].ToString());
+                        break; //Break here for efficiency, as we only need one pilot from the exact planet
+                    }
+                }
+            }
+
+            return resultShips.ToList();
+        }
 
         public static async Task MeasureFuncPerformanceAsync(Func<Task> targetFunc)
         {
@@ -356,10 +392,10 @@ namespace Memos_Project.Services
 
             stopwatch.Stop();
             long afterMemory = GC.GetTotalMemory(true);
-            long memoryUsed = afterMemory - beforeMemory;
+            double memoryUsedKB = (afterMemory - beforeMemory) / 1024.0;
 
             Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
-            Console.WriteLine($"Memory used: {memoryUsed / 1024.0:F2} KB");
+            Console.WriteLine($"Memory used: {memoryUsedKB:+0.00;-0.00} KB");
         }
 
     }
