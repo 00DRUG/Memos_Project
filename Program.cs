@@ -45,16 +45,27 @@ class Program
     {
         var api = ApiService.Instance;
         const string targetPlanetName = "Kashyyyk";
-        // Fetch all data asynchronously  
-        var allPeople = await api.GetJSON_AllPeopleAsync();
-        var allVehicles = await api.GetJSON_AllVehiclesAsync();
-        var allPlanets = await api.GetJSON_AllPlanetsAsync();
+        var shipsTask = api.GetJobject_ShipsOfPilotsFromPlanetAsync_SearchBased(targetPlanetName);
 
-        Console.WriteLine("All ships whose pilot is from the planet Kashyyyk :\n");
+        var ships = await shipsTask;
 
-        var ShipsWithpilotsFromPlanet1 = await api.GetString_ShipsOfPilotsFromPlanetAsync(allPeople, targetPlanetName);
-        
-        foreach (var ship in ShipsWithpilotsFromPlanet1)
+        if (ships != null)
+        {
+            foreach (var ship in ships)
+            {
+                Console.WriteLine($"- {ship["name"]}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("No ships found.");
+        }
+        Console.WriteLine(" ______________________");
+        var people = await api.GetJSON_AllPeopleAsync();
+        var resultShipsTask = api.GetString_ShipsOfPilotsFromPlanetAsync(people, targetPlanetName);
+        var resultShips = await resultShipsTask; 
+
+        foreach (var ship in resultShips)
         {
             Console.WriteLine($"- {ship}");
         }

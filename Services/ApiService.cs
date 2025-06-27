@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.Net.Http;
 
 namespace Memos_Project.Services
 {
@@ -271,8 +272,77 @@ namespace Memos_Project.Services
             }
 
             return shipNames.ToList();
-            
+
         }
         // Additional methods for POST, PUT, DELETE can be added here  
+
+
+        // Search parameter approach
+        // Method with search parameter to get the URL of a planet by its name
+        public async Task<string?> GetPlanetUrlByNameAsync_SearchBased(string planetName)
+        {
+            string url = $"https://swapi.dev/api/planets/?search={planetName}";
+            JObject? json = await GetJsonAsync(url);
+
+            var results = json?["results"] as JArray;
+            if (results != null)
+            {
+                foreach (var planet in results)
+                {
+                    if (planet?["name"]?.ToString().Equals(planetName, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        return planet["url"]?.ToString(); 
+                    }
+                }
+            }
+
+            return null;
+        }
+        // Method to get ships and vehicles with pilots from a specific planet
+        public async Task<List<JObject>?> GetJobject_ShipsOfPilotsFromPlanetAsync_SearchBased(string planetName)
+        {
+            var resultShips = new HashSet<JObject>();
+            //var visitedPilotUrls = new HashSet<string>(); Comment because pilot can have multiple ships or/and vehicles
+
+
+            string? planetUrl = await GetPlanetUrlByNameAsync_SearchBased(planetName);
+            if (planetUrl == null)
+            {
+                Console.WriteLine($"Planet '{planetName}' not found.");
+                return null;
+            }
+            var allShips = (await GetJSON_AllVehiclesAsync()).Concat(await GetJSON_AllStarshipsAsync());
+
+            foreach (var ship in allShips)
+            {
+                var pilots = ship["pilots"] as JArray;
+                if (pilots == null || pilots.Count == 0)
+                    continue;
+
+                foreach (var pilotUrlToken in pilots)
+                {
+                    string? pilotUrl = pilotUrlToken?.ToString();
+                    /*if (string.IsNullOrEmpty(pilotUrl) || visitedPilotUrls.Contains(pilotUrl))
+                        continue;
+
+                    visitedPilotUrls.Add(pilotUrl);
+                    */ // Comment because pilot can have multiple ships or/and vehicles
+                    var pilotJson = await GetJsonAsync(pilotUrl);
+                    if (pilotJson == null) continue;
+
+                    string? homeworldUrl = pilotJson["homeworld"]?.ToString();
+                    if (homeworldUrl == planetUrl)
+                    {
+                        resultShips.Add(ship);
+                        break; //Break here for efficiency, as we only need one pilot from the exact planet
+                    }
+                }
+            }
+
+            return resultShips.ToList();
+        }
+
+
+
     }
 }
